@@ -1,265 +1,300 @@
-import { useState, useEffect } from 'react'
-import { TrendingUp, Activity, Clock, CheckCircle, AlertTriangle } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { Badge } from './ui/badge'
+import React, { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { 
+  BarChart3, 
+  TrendingUp, 
+  TrendingDown,
+  Activity, 
+  Clock, 
+  Zap,
+  Users,
+  Calendar,
+  Filter,
+  Download,
+  RefreshCw
+} from 'lucide-react'
+import { User } from '@supabase/supabase-js'
 
-export function Analytics() {
+interface AnalyticsProps {
+  user: User
+}
+
+export default function Analytics({ user }: AnalyticsProps) {
   const [timeRange, setTimeRange] = useState('7d')
   
-  // Mock analytics data
-  const analyticsData = {
-    totalExecutions: 247,
-    successRate: 94.3,
-    avgExecutionTime: 2.4,
-    errorRate: 5.7,
-    topWorkflows: [
-      { name: 'Weather Calendar Sync', executions: 45, successRate: 98 },
-      { name: 'Daily News Digest', executions: 38, successRate: 92 },
-      { name: 'Social Media Monitor', executions: 32, successRate: 89 }
-    ],
-    recentErrors: [
-      { workflow: 'Weather Calendar Sync', error: 'API rate limit exceeded', time: '2 hours ago' },
-      { workflow: 'Email Automation', error: 'Invalid email address', time: '5 hours ago' }
-    ],
-    executionTrend: [
-      { day: 'Mon', executions: 32, success: 30 },
-      { day: 'Tue', executions: 45, success: 43 },
-      { day: 'Wed', executions: 38, success: 36 },
-      { day: 'Thu', executions: 52, success: 49 },
-      { day: 'Fri', executions: 41, success: 39 },
-      { day: 'Sat', executions: 28, success: 26 },
-      { day: 'Sun', executions: 35, success: 33 }
-    ]
-  }
+  const timeRanges = [
+    { id: '24h', label: 'Last 24 Hours' },
+    { id: '7d', label: 'Last 7 Days' },
+    { id: '30d', label: 'Last 30 Days' },
+    { id: '90d', label: 'Last 90 Days' }
+  ]
+
+  const metrics = [
+    {
+      title: 'Total Executions',
+      value: '2,847',
+      change: '+12.5%',
+      trend: 'up',
+      icon: Activity,
+      color: 'text-blue-600'
+    },
+    {
+      title: 'Success Rate',
+      value: '98.2%',
+      change: '+2.1%',
+      trend: 'up',
+      icon: TrendingUp,
+      color: 'text-green-600'
+    },
+    {
+      title: 'Active Workflows',
+      value: '12',
+      change: '+3',
+      trend: 'up',
+      icon: Zap,
+      color: 'text-purple-600'
+    },
+    {
+      title: 'Hours Saved',
+      value: '156',
+      change: '+24',
+      trend: 'up',
+      icon: Clock,
+      color: 'text-orange-600'
+    }
+  ]
+
+  const workflowPerformance = [
+    { name: 'Email Newsletter', executions: 245, success: 99.2, errors: 2 },
+    { name: 'Lead Generation', executions: 189, success: 94.7, errors: 10 },
+    { name: 'Social Media', executions: 156, success: 97.4, errors: 4 },
+    { name: 'Meeting Notes', executions: 89, success: 91.0, errors: 8 },
+    { name: 'Data Backup', executions: 67, success: 100, errors: 0 }
+  ]
+
+  const recentErrors = [
+    {
+      workflow: 'Lead Generation Pipeline',
+      error: 'API rate limit exceeded',
+      time: '2 hours ago',
+      status: 'resolved'
+    },
+    {
+      workflow: 'Email Newsletter',
+      error: 'Invalid email address format',
+      time: '1 day ago',
+      status: 'resolved'
+    },
+    {
+      workflow: 'Meeting Notes Generator',
+      error: 'Recording file not found',
+      time: '2 days ago',
+      status: 'pending'
+    }
+  ]
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Analytics</h1>
-          <p className="text-slate-600 mt-2">Monitor workflow performance and insights</p>
+          <h1 className="text-3xl font-bold text-slate-800">Analytics</h1>
+          <p className="text-slate-600 mt-1">
+            Monitor your automation performance and insights
+          </p>
         </div>
-        <div className="flex space-x-2">
-          {['24h', '7d', '30d', '90d'].map(range => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                timeRange === range 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {range}
-            </button>
-          ))}
+        <div className="flex items-center space-x-3">
+          <div className="flex space-x-2">
+            {timeRanges.map((range) => (
+              <Button
+                key={range.id}
+                variant={timeRange === range.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTimeRange(range.id)}
+              >
+                {range.label}
+              </Button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+          <Button variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Executions</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analyticsData.totalExecutions}</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{analyticsData.successRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              +2.1% from last week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Execution Time</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analyticsData.avgExecutionTime}s</div>
-            <p className="text-xs text-muted-foreground">
-              -0.3s from last week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Error Rate</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{analyticsData.errorRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              -1.2% from last week
-            </p>
-          </CardContent>
-        </Card>
+        {metrics.map((metric, index) => {
+          const Icon = metric.icon
+          return (
+            <Card key={index}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-slate-600 text-sm font-medium">{metric.title}</p>
+                    <p className="text-3xl font-bold text-slate-800 mt-1">{metric.value}</p>
+                    <div className="flex items-center mt-2">
+                      {metric.trend === 'up' ? (
+                        <TrendingUp className="w-4 h-4 text-green-600 mr-1" />
+                      ) : (
+                        <TrendingDown className="w-4 h-4 text-red-600 mr-1" />
+                      )}
+                      <span className={`text-sm font-medium ${
+                        metric.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {metric.change}
+                      </span>
+                      <span className="text-slate-500 text-sm ml-1">vs last period</span>
+                    </div>
+                  </div>
+                  <Icon className={`w-8 h-8 ${metric.color}`} />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
-      {/* Charts and Details */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Execution Trend */}
+        {/* Workflow Performance */}
         <Card>
           <CardHeader>
-            <CardTitle>Execution Trend</CardTitle>
+            <CardTitle className="flex items-center space-x-2">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+              <span>Workflow Performance</span>
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {analyticsData.executionTrend.map((day, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 text-sm font-medium text-slate-600">{day.day}</div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-32 bg-slate-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${(day.executions / 60) * 100}%` }}
-                          />
-                        </div>
-                        <div className="w-32 bg-slate-200 rounded-full h-2">
-                          <div 
-                            className="bg-green-600 h-2 rounded-full"
-                            style={{ width: `${(day.success / day.executions) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-sm text-slate-600">
-                    {day.success}/{day.executions}
+          <CardContent className="space-y-4">
+            {workflowPerformance.map((workflow, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-slate-800">{workflow.name}</span>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {workflow.executions} runs
+                    </Badge>
+                    <Badge 
+                      variant={workflow.success >= 95 ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {workflow.success}% success
+                    </Badge>
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="flex items-center justify-center space-x-6 mt-4 pt-4 border-t">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                <span className="text-sm text-slate-600">Total Executions</span>
+                <div className="w-full bg-slate-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full ${
+                      workflow.success >= 95 ? 'bg-green-500' : 
+                      workflow.success >= 90 ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}
+                    style={{ width: `${workflow.success}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-600">
+                  <span>{workflow.executions} total executions</span>
+                  <span>{workflow.errors} errors</span>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-600 rounded-full"></div>
-                <span className="text-sm text-slate-600">Successful</span>
-              </div>
-            </div>
+            ))}
           </CardContent>
         </Card>
 
-        {/* Top Workflows */}
+        {/* Recent Errors */}
         <Card>
           <CardHeader>
-            <CardTitle>Top Performing Workflows</CardTitle>
+            <CardTitle className="flex items-center space-x-2">
+              <Activity className="w-5 h-5 text-red-600" />
+              <span>Recent Issues</span>
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {analyticsData.topWorkflows.map((workflow, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-600">#{index + 1}</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{workflow.name}</p>
-                      <p className="text-xs text-slate-500">{workflow.executions} executions</p>
-                    </div>
+          <CardContent className="space-y-4">
+            {recentErrors.map((error, index) => (
+              <div key={index} className="p-4 bg-slate-50 rounded-lg">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-slate-800">{error.workflow}</h4>
+                    <p className="text-sm text-slate-600 mt-1">{error.error}</p>
+                    <p className="text-xs text-slate-500 mt-2">{error.time}</p>
                   </div>
-                  <Badge variant={workflow.successRate > 95 ? 'default' : 'secondary'}>
-                    {workflow.successRate}%
+                  <Badge 
+                    variant={error.status === 'resolved' ? "default" : "secondary"}
+                    className="text-xs"
+                  >
+                    {error.status}
                   </Badge>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+            
+            {recentErrors.length === 0 && (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <TrendingUp className="w-6 h-6 text-green-600" />
+                </div>
+                <h3 className="font-medium text-slate-800 mb-1">All systems running smoothly!</h3>
+                <p className="text-sm text-slate-600">No recent errors to report.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Errors */}
+      {/* Execution Timeline */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Errors</CardTitle>
+          <CardTitle className="flex items-center space-x-2">
+            <Calendar className="w-5 h-5 text-purple-600" />
+            <span>Execution Timeline</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {analyticsData.recentErrors.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
-              <CheckCircle className="mx-auto h-12 w-12 text-green-300 mb-4" />
-              <p>No recent errors</p>
-              <p className="text-sm">All workflows are running smoothly</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {analyticsData.recentErrors.map((error, index) => (
-                <div key={index} className="flex items-start space-x-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                  <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-medium text-red-900">{error.workflow}</p>
-                    <p className="text-sm text-red-700">{error.error}</p>
-                    <p className="text-xs text-red-600 mt-1">{error.time}</p>
-                  </div>
-                  <button className="text-xs bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-700 transition-colors">
-                    Retry
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Performance Insights */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Performance Insights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center space-x-2 mb-2">
-                <TrendingUp className="h-5 w-5 text-green-600" />
-                <h3 className="font-medium text-green-900">Optimization Tip</h3>
-              </div>
-              <p className="text-sm text-green-700">
-                Your Weather Calendar Sync workflow has a 98% success rate. Consider using it as a template for other workflows.
-              </p>
-            </div>
-            
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center space-x-2 mb-2">
-                <Clock className="h-5 w-5 text-blue-600" />
-                <h3 className="font-medium text-blue-900">Speed Improvement</h3>
-              </div>
-              <p className="text-sm text-blue-700">
-                Average execution time decreased by 0.3s this week. API optimizations are working well.
-              </p>
-            </div>
-            
-            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <div className="flex items-center space-x-2 mb-2">
-                <Activity className="h-5 w-5 text-purple-600" />
-                <h3 className="font-medium text-purple-900">Usage Pattern</h3>
-              </div>
-              <p className="text-sm text-purple-700">
-                Peak usage occurs on weekdays between 8-10 AM. Consider scheduling maintenance outside these hours.
+          <div className="h-64 flex items-center justify-center bg-slate-50 rounded-lg">
+            <div className="text-center">
+              <BarChart3 className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+              <h3 className="font-medium text-slate-800 mb-1">Chart Coming Soon</h3>
+              <p className="text-sm text-slate-600">
+                Interactive execution timeline will be available in the next update
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Usage Insights */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Users className="w-8 h-8 text-blue-600 mx-auto mb-3" />
+            <h3 className="font-semibold text-slate-800 mb-1">Peak Usage</h3>
+            <p className="text-2xl font-bold text-blue-600">9-11 AM</p>
+            <p className="text-sm text-slate-600">Most active time</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Zap className="w-8 h-8 text-green-600 mx-auto mb-3" />
+            <h3 className="font-semibold text-slate-800 mb-1">Most Used</h3>
+            <p className="text-lg font-bold text-green-600">Email Automation</p>
+            <p className="text-sm text-slate-600">Top workflow category</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Clock className="w-8 h-8 text-orange-600 mx-auto mb-3" />
+            <h3 className="font-semibold text-slate-800 mb-1">Avg Runtime</h3>
+            <p className="text-2xl font-bold text-orange-600">2.3s</p>
+            <p className="text-sm text-slate-600">Per execution</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

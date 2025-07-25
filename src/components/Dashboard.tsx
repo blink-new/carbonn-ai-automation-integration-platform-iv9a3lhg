@@ -1,246 +1,294 @@
-import { useState, useEffect } from 'react'
-import { Activity, Zap, Calendar, TrendingUp, Clock, CheckCircle } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { Badge } from './ui/badge'
-import { blink } from '../blink/client'
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { 
+  Activity, 
+  Zap, 
+  Users, 
+  TrendingUp, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle,
+  Play,
+  Pause,
+  Settings,
+  Plus,
+  BarChart3,
+  Globe,
+  Bot,
+  Calendar,
+  Mail,
+  FileText
+} from 'lucide-react'
+import { User } from '@supabase/supabase-js'
 
-export function Dashboard() {
+interface DashboardProps {
+  user: User
+}
+
+export default function Dashboard({ user }: DashboardProps) {
   const [stats, setStats] = useState({
-    totalWorkflows: 0,
-    activeWorkflows: 0,
-    totalRuns: 0,
-    successRate: 0
+    activeWorkflows: 12,
+    totalExecutions: 1847,
+    successRate: 98.2,
+    integrations: 8,
+    savedHours: 156
   })
-  const [recentRuns, setRecentRuns] = useState([])
-  const [loading, setLoading] = useState(true)
 
-  const loadDashboardData = async () => {
-    try {
-      const user = await blink.auth.me()
-      
-      // Load workflows
-      const workflows = await blink.db.workflows.list({
-        where: { userId: user.id },
-        orderBy: { createdAt: 'desc' }
-      })
-
-      // Load recent workflow runs
-      const runs = await blink.db.workflowRuns.list({
-        where: { userId: user.id },
-        orderBy: { startedAt: 'desc' },
-        limit: 10
-      })
-
-      const activeWorkflows = workflows.filter(w => w.status === 'active').length
-      const successfulRuns = runs.filter(r => r.status === 'completed').length
-      const successRate = runs.length > 0 ? (successfulRuns / runs.length) * 100 : 0
-
-      setStats({
-        totalWorkflows: workflows.length,
-        activeWorkflows,
-        totalRuns: runs.length,
-        successRate: Math.round(successRate)
-      })
-
-      setRecentRuns(runs)
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error)
-    } finally {
-      setLoading(false)
+  const [recentActivity] = useState([
+    {
+      id: 1,
+      type: 'workflow',
+      title: 'Email Newsletter Automation',
+      status: 'completed',
+      timestamp: '2 minutes ago',
+      icon: Mail
+    },
+    {
+      id: 2,
+      type: 'research',
+      title: 'AI Trends Research',
+      status: 'running',
+      timestamp: '5 minutes ago',
+      icon: Globe
+    },
+    {
+      id: 3,
+      type: 'calendar',
+      title: 'Meeting Scheduled',
+      status: 'completed',
+      timestamp: '12 minutes ago',
+      icon: Calendar
+    },
+    {
+      id: 4,
+      type: 'document',
+      title: 'Report Generated',
+      status: 'completed',
+      timestamp: '1 hour ago',
+      icon: FileText
     }
-  }
+  ])
 
-  useEffect(() => {
-    loadDashboardData()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-slate-200 rounded w-1/4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-slate-200 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const [activeWorkflows] = useState([
+    {
+      id: 1,
+      name: 'Social Media Automation',
+      status: 'active',
+      executions: 245,
+      successRate: 99.2,
+      lastRun: '5 min ago'
+    },
+    {
+      id: 2,
+      name: 'Lead Generation Pipeline',
+      status: 'active',
+      executions: 89,
+      successRate: 97.8,
+      lastRun: '12 min ago'
+    },
+    {
+      id: 3,
+      name: 'Data Backup Sync',
+      status: 'paused',
+      executions: 156,
+      successRate: 100,
+      lastRun: '2 hours ago'
+    }
+  ])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-slate-600 mt-2">Monitor your automation workflows and integrations</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">
+            Welcome back, {user.user_metadata?.full_name?.split(' ')[0] || 'User'}!
+          </h1>
+          <p className="text-slate-600 mt-1">
+            Your automation platform is running smoothly. Here's what's happening.
+          </p>
+        </div>
+        <div className="flex space-x-3">
+          <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
+            <Plus className="w-4 h-4 mr-2" />
+            New Workflow
+          </Button>
+          <Button variant="outline">
+            <Settings className="w-4 h-4 mr-2" />
+            Settings
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Workflows</CardTitle>
-            <Zap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalWorkflows}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.activeWorkflows} active
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Runs</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalRuns}</div>
-            <p className="text-xs text-muted-foreground">
-              This month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.successRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              Last 30 days
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">AI Requests</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">47</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last week
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Workflow Runs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentRuns.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                <Activity className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                <p>No workflow runs yet</p>
-                <p className="text-sm">Start by creating your first workflow</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <Card className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-0">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Active Workflows</p>
+                <p className="text-3xl font-bold">{stats.activeWorkflows}</p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {recentRuns.slice(0, 5).map((run: any) => (
-                  <div key={run.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-2 h-2 rounded-full ${
-                        run.status === 'completed' ? 'bg-green-500' : 
-                        run.status === 'failed' ? 'bg-red-500' : 'bg-yellow-500'
-                      }`} />
-                      <div>
-                        <p className="font-medium text-sm">Workflow Run</p>
-                        <p className="text-xs text-slate-500">
-                          {new Date(run.startedAt).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant={run.status === 'completed' ? 'default' : 'destructive'}>
-                      {run.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
+              <Zap className="w-8 h-8 text-blue-200" />
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <button className="w-full flex items-center space-x-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-left">
-                <Zap className="h-5 w-5 text-blue-600" />
-                <div>
-                  <p className="font-medium text-blue-900">Create New Workflow</p>
-                  <p className="text-sm text-blue-700">Build automation with AI</p>
-                </div>
-              </button>
-              
-              <button className="w-full flex items-center space-x-3 p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="font-medium text-green-900">Connect Integration</p>
-                  <p className="text-sm text-green-700">Add new app connection</p>
-                </div>
-              </button>
-              
-              <button className="w-full flex items-center space-x-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-left">
-                <Clock className="h-5 w-5 text-purple-600" />
-                <div>
-                  <p className="font-medium text-purple-900">Schedule Task</p>
-                  <p className="text-sm text-purple-700">Set up recurring automation</p>
-                </div>
-              </button>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-sm font-medium">Total Executions</p>
+                <p className="text-3xl font-bold text-slate-800">{stats.totalExecutions.toLocaleString()}</p>
+              </div>
+              <Activity className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-sm font-medium">Success Rate</p>
+                <p className="text-3xl font-bold text-slate-800">{stats.successRate}%</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-sm font-medium">Integrations</p>
+                <p className="text-3xl font-bold text-slate-800">{stats.integrations}</p>
+              </div>
+              <Users className="w-8 h-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-sm font-medium">Hours Saved</p>
+                <p className="text-3xl font-bold text-slate-800">{stats.savedHours}</p>
+              </div>
+              <Clock className="w-8 h-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* AI Suggestions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Active Workflows */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Zap className="w-5 h-5 text-blue-600" />
+                <span>Active Workflows</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {activeWorkflows.map((workflow) => (
+                <div key={workflow.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3">
+                      <h3 className="font-semibold text-slate-800">{workflow.name}</h3>
+                      <Badge variant={workflow.status === 'active' ? 'default' : 'secondary'}>
+                        {workflow.status}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center space-x-4 mt-2 text-sm text-slate-600">
+                      <span>{workflow.executions} executions</span>
+                      <span>{workflow.successRate}% success</span>
+                      <span>Last run: {workflow.lastRun}</span>
+                    </div>
+                    <Progress value={workflow.successRate} className="mt-2 h-2" />
+                  </div>
+                  <div className="flex items-center space-x-2 ml-4">
+                    <Button size="sm" variant="outline">
+                      {workflow.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Activity className="w-5 h-5 text-green-600" />
+              <span>Recent Activity</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {recentActivity.map((activity) => {
+              const Icon = activity.icon
+              return (
+                <div key={activity.id} className="flex items-center space-x-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    activity.status === 'completed' ? 'bg-green-100' : 'bg-blue-100'
+                  }`}>
+                    <Icon className={`w-5 h-5 ${
+                      activity.status === 'completed' ? 'text-green-600' : 'text-blue-600'
+                    }`} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-800">{activity.title}</p>
+                    <p className="text-sm text-slate-600">{activity.timestamp}</p>
+                  </div>
+                  {activity.status === 'completed' ? (
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  )}
+                </div>
+              )
+            })}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>AI Suggestions</CardTitle>
+          <CardTitle className="flex items-center space-x-2">
+            <Bot className="w-5 h-5 text-purple-600" />
+            <span>Quick Actions</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
-              <h3 className="font-medium text-blue-900 mb-2">Weather Calendar Sync</h3>
-              <p className="text-sm text-blue-700 mb-3">
-                Automatically check weather and add reminders for rainy days
-              </p>
-              <button className="text-xs bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700 transition-colors">
-                Create Workflow
-              </button>
-            </div>
-            
-            <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-              <h3 className="font-medium text-green-900 mb-2">News Digest</h3>
-              <p className="text-sm text-green-700 mb-3">
-                Daily AI-curated news summary sent to your email
-              </p>
-              <button className="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700 transition-colors">
-                Create Workflow
-              </button>
-            </div>
-            
-            <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-              <h3 className="font-medium text-purple-900 mb-2">Smart Reminders</h3>
-              <p className="text-sm text-purple-700 mb-3">
-                AI analyzes your schedule and suggests optimal meeting times
-              </p>
-              <button className="text-xs bg-purple-600 text-white px-3 py-1 rounded-full hover:bg-purple-700 transition-colors">
-                Create Workflow
-              </button>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+              <Globe className="w-6 h-6 text-blue-600" />
+              <span className="text-sm">Research & Analyze</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+              <Calendar className="w-6 h-6 text-green-600" />
+              <span className="text-sm">Schedule Events</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+              <Mail className="w-6 h-6 text-orange-600" />
+              <span className="text-sm">Send Emails</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+              <BarChart3 className="w-6 h-6 text-purple-600" />
+              <span className="text-sm">Generate Reports</span>
+            </Button>
           </div>
         </CardContent>
       </Card>

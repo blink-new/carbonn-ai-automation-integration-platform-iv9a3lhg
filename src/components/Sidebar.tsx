@@ -1,93 +1,134 @@
+import React from 'react'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { 
+  Bot, 
   LayoutDashboard, 
   Workflow, 
-  Plug, 
-  Bot, 
+  Puzzle, 
+  MessageSquare, 
   BarChart3, 
-  Settings,
-  LogOut
+  LogOut,
+  Zap,
+  Settings
 } from 'lucide-react'
-import { blink } from '../blink/client'
+import { User } from '@supabase/supabase-js'
 
 interface SidebarProps {
-  currentPage: string
-  onPageChange: (page: string) => void
-  user: any
+  user: User
+  activeTab: string
+  setActiveTab: (tab: string) => void
+  onSignOut: () => void
 }
 
-export function Sidebar({ currentPage, onPageChange, user }: SidebarProps) {
+export default function Sidebar({ user, activeTab, setActiveTab, onSignOut }: SidebarProps) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'workflows', label: 'Workflows', icon: Workflow },
-    { id: 'integrations', label: 'Integrations', icon: Plug },
-    { id: 'ai-assistant', label: 'AI Assistant', icon: Bot },
+    { id: 'integrations', label: 'Integrations', icon: Puzzle },
+    { id: 'ai-assistant', label: 'AI Assistant', icon: MessageSquare },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   ]
 
   return (
-    <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white flex flex-col">
-      {/* Logo */}
-      <div className="p-6 border-b border-slate-700">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-          carbonN
-        </h1>
-        <p className="text-sm text-slate-400 mt-1">AI Automation Platform</p>
+    <div className="fixed left-0 top-0 h-full w-64 bg-white border-r border-slate-200 flex flex-col shadow-sm">
+      {/* Header */}
+      <div className="p-6 border-b border-slate-200">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center">
+            <Bot className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-800">carbonN</h1>
+            <p className="text-xs text-slate-500">AI Automation Platform</p>
+          </div>
+        </div>
+      </div>
+
+      {/* User Profile */}
+      <div className="p-4 border-b border-slate-200">
+        <div className="flex items-center space-x-3">
+          <Avatar className="w-10 h-10">
+            <AvatarImage src={user.user_metadata?.avatar_url} />
+            <AvatarFallback className="bg-blue-100 text-blue-600">
+              {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-slate-800 truncate">
+              {user.user_metadata?.full_name || 'User'}
+            </p>
+            <p className="text-xs text-slate-500 truncate">{user.email}</p>
+          </div>
+          <Badge variant="secondary" className="text-xs">
+            Pro
+          </Badge>
+        </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon
-            const isActive = currentPage === item.id
-            
-            return (
-              <li key={item.id}>
-                <button
-                  onClick={() => onPageChange(item.id)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive 
-                      ? 'bg-blue-600 text-white' 
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span className="font-medium">{item.label}</span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
+      <nav className="flex-1 p-4 space-y-2">
+        {menuItems.map((item) => {
+          const Icon = item.icon
+          const isActive = activeTab === item.id
+          
+          return (
+            <Button
+              key={item.id}
+              variant={isActive ? "default" : "ghost"}
+              className={`w-full justify-start h-11 ${
+                isActive 
+                  ? 'bg-blue-600 text-white shadow-sm' 
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+              }`}
+              onClick={() => setActiveTab(item.id)}
+            >
+              <Icon className="w-5 h-5 mr-3" />
+              {item.label}
+              {item.id === 'workflows' && (
+                <Badge variant="secondary" className="ml-auto text-xs">
+                  3
+                </Badge>
+              )}
+              {item.id === 'integrations' && (
+                <Badge variant="secondary" className="ml-auto text-xs">
+                  12
+                </Badge>
+              )}
+            </Button>
+          )
+        })}
       </nav>
 
-      {/* User Profile */}
-      <div className="p-4 border-t border-slate-700">
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium">
-              {user?.email?.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">
-              {user?.email}
-            </p>
-            <p className="text-xs text-slate-400">Pro Plan</p>
-          </div>
-        </div>
-        
-        <div className="flex space-x-2">
-          <button className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
-            <Settings size={16} />
-            <span>Settings</span>
-          </button>
-          <button 
-            onClick={() => blink.auth.logout()}
-            className="flex items-center justify-center px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-          >
-            <LogOut size={16} />
-          </button>
-        </div>
+      {/* Quick Actions */}
+      <div className="p-4 border-t border-slate-200 space-y-2">
+        <Button 
+          variant="outline" 
+          className="w-full justify-start h-10 text-slate-600 hover:text-slate-800"
+        >
+          <Zap className="w-4 h-4 mr-3" />
+          Quick Automation
+        </Button>
+        <Button 
+          variant="outline" 
+          className="w-full justify-start h-10 text-slate-600 hover:text-slate-800"
+        >
+          <Settings className="w-4 h-4 mr-3" />
+          Settings
+        </Button>
+      </div>
+
+      {/* Sign Out */}
+      <div className="p-4 border-t border-slate-200">
+        <Button
+          variant="ghost"
+          className="w-full justify-start h-10 text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={onSignOut}
+        >
+          <LogOut className="w-4 h-4 mr-3" />
+          Sign Out
+        </Button>
       </div>
     </div>
   )
